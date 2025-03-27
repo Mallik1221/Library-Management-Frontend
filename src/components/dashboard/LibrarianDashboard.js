@@ -1,0 +1,184 @@
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import {
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  Box,
+  Card,
+  CardContent,
+  Button,
+  CircularProgress,
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@mui/material';
+import {
+  Book as BookIcon,
+  LibraryBooks as LibraryBooksIcon,
+  People as PeopleIcon,
+  Add as AddIcon,
+} from '@mui/icons-material';
+import { fetchBooks } from '../../features/books/bookSlice';
+
+const LibrarianDashboard = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { books, loading, error } = useSelector((state) => state.books);
+  const { user } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    dispatch(fetchBooks());
+  }, [dispatch]);
+
+  const stats = {
+    totalBooks: books.length,
+    availableBooks: books.filter(book => book.status === 'available').length,
+    borrowedBooks: books.filter(book => book.status === 'borrowed').length,
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error.message}
+        </Alert>
+      </Container>
+    );
+  }
+
+  return (
+    <Container sx={{ py: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Librarian Dashboard
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+        Welcome back, {user?.name}
+      </Typography>
+
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        {/* Statistics Cards */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={2}>
+                <BookIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+                <Typography variant="h6">Total Books</Typography>
+              </Box>
+              <Typography variant="h3">{stats.totalBooks}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={2}>
+                <LibraryBooksIcon sx={{ fontSize: 40, color: 'success.main', mr: 2 }} />
+                <Typography variant="h6">Available Books</Typography>
+              </Box>
+              <Typography variant="h3">{stats.availableBooks}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={2}>
+                <PeopleIcon sx={{ fontSize: 40, color: 'warning.main', mr: 2 }} />
+                <Typography variant="h6">Borrowed Books</Typography>
+              </Box>
+              <Typography variant="h3">{stats.borrowedBooks}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Quick Actions */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Quick Actions
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => navigate('/books/add')}
+                >
+                  Add New Book
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={<LibraryBooksIcon />}
+                  onClick={() => navigate('/books')}
+                >
+                  Manage Books
+                </Button>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+
+        {/* Recent Borrowings */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Recent Borrowings
+            </Typography>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Book Title</TableCell>
+                    <TableCell>Borrower</TableCell>
+                    <TableCell>Borrowed Date</TableCell>
+                    <TableCell>Due Date</TableCell>
+                    <TableCell>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {books
+                    .filter(book => book.status === 'borrowed')
+                    .slice(0, 5)
+                    .map((book) => (
+                      <TableRow key={book._id}>
+                        <TableCell>{book.title}</TableCell>
+                        <TableCell>{book.borrowedBy?.name || 'N/A'}</TableCell>
+                        <TableCell>
+                          {new Date(book.borrowedAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(book.dueDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{book.status}</TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        </Grid>
+      </Grid>
+    </Container>
+  );
+};
+
+export default LibrarianDashboard; 
