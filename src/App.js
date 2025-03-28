@@ -15,6 +15,8 @@ import AdminDashboard from './components/dashboard/AdminDashboard';
 import LibrarianDashboard from './components/dashboard/LibrarianDashboard';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import MemberDashboard from './components/dashboard/MemberDashboard';
+import AddUser from './components/users/AddUser';
+import UserList from './components/users/UserList';
 
 // Create a theme instance
 const theme = createTheme({
@@ -82,6 +84,23 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['Member']}>
                     <MemberDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              {/* User Management Routes */}
+              <Route
+                path="/users"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin']}>
+                    <UserList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/users/add"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin']}>
+                    <AddUser />
                   </ProtectedRoute>
                 }
               />

@@ -7,8 +7,8 @@ const getInitialState = () => {
     const user = authService.getCurrentUser();
     const isAuthenticated = authService.isAuthenticated();
     return {
-      user,
-      isAuthenticated,
+      user: user || null,
+      isAuthenticated: isAuthenticated && !!user,
       loading: false,
       error: null,
     };

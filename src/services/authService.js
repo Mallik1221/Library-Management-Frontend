@@ -31,7 +31,8 @@ export const authService = {
       const response = await api.post('/auth/login', { email, password });
       if (response.data.token) {
         safeLocalStorage.setItem('token', response.data.token);
-        safeLocalStorage.setItem('user', JSON.stringify(response.data.user));
+        const { token, ...userData } = response.data;
+        safeLocalStorage.setItem('user', JSON.stringify(userData));
       }
       return response.data;
     } catch (error) {
@@ -44,7 +45,8 @@ export const authService = {
       const response = await api.post('/auth/register', userData);
       if (response.data.token) {
         safeLocalStorage.setItem('token', response.data.token);
-        safeLocalStorage.setItem('user', JSON.stringify(response.data.user));
+        const { token, ...userData } = response.data;
+        safeLocalStorage.setItem('user', JSON.stringify(userData));
       }
       return response.data;
     } catch (error) {
@@ -70,5 +72,35 @@ export const authService = {
 
   isAuthenticated() {
     return !!safeLocalStorage.getItem('token');
-  }
+  },
+
+  // Get all users (Admin only)
+  async getAllUsers() {
+    try {
+      const response = await api.get('/users');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to fetch users' };
+    }
+  },
+
+  // Update user (Admin only)
+  async updateUser(userId, userData) {
+    try {
+      const response = await api.put(`/users/${userId}`, userData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to update user' };
+    }
+  },
+
+  // Delete user (Admin only)
+  async deleteUser(userId) {
+    try {
+      const response = await api.delete(`/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to delete user' };
+    }
+  },
 }; 
