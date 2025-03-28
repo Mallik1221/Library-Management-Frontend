@@ -19,6 +19,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { fetchBooks, deleteBookById } from '../../features/books/bookSlice';
 import { useNavigate } from 'react-router-dom';
+import { getImageUrl, PLACEHOLDER_IMAGE } from '../../utils/imageUtils';
 
 const BookList = () => {
   const dispatch = useDispatch();
@@ -66,16 +67,6 @@ const BookList = () => {
   };
 
   const isAdminOrLibrarian = user && (user.role === 'Admin' || user.role === 'Librarian');
-
-  const getImageUrl = (bookImage) => {
-    if (!bookImage) return 'https://via.placeholder.com/200x300?text=No+Image';
-    if (bookImage.startsWith('http')) return bookImage;
-    // Ensure the path starts with /uploads/
-    if (!bookImage.startsWith('/uploads/')) {
-      return `http://localhost:5000/uploads/${bookImage}`;
-    }
-    return `http://localhost:5000${bookImage}`;
-  };
 
   if (loading) {
     return (
@@ -155,7 +146,7 @@ const BookList = () => {
                   alt={book.title}
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = 'https://via.placeholder.com/200x300?text=No+Image';
+                    e.target.src = PLACEHOLDER_IMAGE;
                   }}
                   sx={{
                     objectFit: 'contain',

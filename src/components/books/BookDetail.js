@@ -21,6 +21,7 @@ import {
   borrowBookById,
   returnBookById,
 } from '../../features/books/bookSlice';
+import { getImageUrl, LARGE_PLACEHOLDER_IMAGE } from '../../utils/imageUtils';
 
 const BookDetail = () => {
   const { id } = useParams();
@@ -98,7 +99,7 @@ const BookDetail = () => {
         <Grid container spacing={4}>
           <Grid item xs={12} md={4}>
             <img
-              src={book.bookImage ? `http://localhost:5000${book.bookImage}` : 'https://via.placeholder.com/300x400'}
+              src={getImageUrl(book.bookImage, LARGE_PLACEHOLDER_IMAGE)}
               alt={book.title}
               style={{
                 width: '100%',
@@ -108,7 +109,7 @@ const BookDetail = () => {
               }}
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = 'https://via.placeholder.com/400x600?text=No+Image';
+                e.target.src = LARGE_PLACEHOLDER_IMAGE;
               }}
             />
           </Grid>
