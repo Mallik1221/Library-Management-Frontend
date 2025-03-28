@@ -1,6 +1,15 @@
 import api from './api';
 
-export const bookService = {
+const getDashboardStats = async () => {
+  try {
+    const response = await api.get('/books/stats/dashboard');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const bookService = {
   async getAllBooks() {
     try {
       const response = await api.get('/books');
@@ -107,5 +116,19 @@ export const bookService = {
     } catch (error) {
       throw error.response?.data || { message: 'Error fetching user history' };
     }
-  }
-}; 
+  },
+
+  // Get recent borrowings
+  async getRecentBorrowings() {
+    try {
+      const response = await api.get('/books/borrowings/recent');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to fetch recent borrowings' };
+    }
+  },
+
+  getDashboardStats
+};
+
+export { bookService }; 

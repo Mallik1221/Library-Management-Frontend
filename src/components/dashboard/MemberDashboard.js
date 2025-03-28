@@ -6,10 +6,12 @@ import {
   Paper,
   Typography,
   Box,
-  CircularProgress,
-  Alert,
   Card,
   CardContent,
+  CircularProgress,
+  Alert,
+  IconButton,
+  Tooltip,
   Table,
   TableBody,
   TableCell,
@@ -19,9 +21,56 @@ import {
   Tabs,
   Tab,
   Button,
+  Chip,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import {
+  Book as BookIcon,
+  LibraryBooks as LibraryBooksIcon,
+  History as HistoryIcon,
+  Notifications as NotificationsIcon,
+  TrendingUp as TrendingUpIcon,
+  Warning as WarningIcon,
+  CheckCircle as CheckCircleIcon,
+} from '@mui/icons-material';
 import { fetchUserHistory } from '../../features/books/bookSlice';
+
+const StatCard = ({ title, value, icon, color, trend }) => (
+  <Card sx={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <CardContent>
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box>
+          <Typography color="textSecondary" gutterBottom>
+            {title}
+          </Typography>
+          <Typography variant="h4" component="div">
+            {value}
+          </Typography>
+          {trend && (
+            <Box display="flex" alignItems="center" mt={1}>
+              <TrendingUpIcon sx={{ color: 'success.main', mr: 0.5 }} />
+              <Typography variant="body2" color="success.main">
+                {trend}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+        <Box
+          sx={{
+            backgroundColor: `${color}15`,
+            borderRadius: '50%',
+            p: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {icon}
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+);
 
 const TabPanel = (props) => {
   const { children, value, index, ...other } = props;
@@ -98,64 +147,71 @@ const MemberDashboard = () => {
         {/* Welcome Section */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="h4" gutterBottom>
-              Welcome, {user?.name || 'Member'}!
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Member Dashboard
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box>
+                <Typography variant="h4" gutterBottom>
+                  Welcome, {user?.name || 'Member'}!
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Member Dashboard
+                </Typography>
+              </Box>
+              <Box>
+                <Tooltip title="Notifications">
+                  <IconButton>
+                    <NotificationsIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
           </Paper>
         </Grid>
 
         {/* Stats Cards */}
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Currently Borrowed
-              </Typography>
-              <Typography variant="h3">
-                {currentlyBorrowed.length}
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Currently Borrowed"
+            value={currentlyBorrowed.length}
+            icon={<BookIcon sx={{ color: 'primary.main', fontSize: 40 }} />}
+            color="primary"
+            trend="+2 this month"
+          />
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Total Books Borrowed
-              </Typography>
-              <Typography variant="h3">
-                {userHistory.length}
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total Books Read"
+            value={borrowHistory.length}
+            icon={<LibraryBooksIcon sx={{ color: 'success.main', fontSize: 40 }} />}
+            color="success"
+            trend="+5 this month"
+          />
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Total Fines
-              </Typography>
-              <Typography variant="h3">
-                ₹{userHistory.reduce((total, record) => total + (record.fine || 0), 0)}
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total Fines"
+            value={`₹${userHistory.reduce((total, record) => total + (record.fine || 0), 0)}`}
+            icon={<WarningIcon sx={{ color: 'error.main', fontSize: 40 }} />}
+            color="error"
+            trend="₹0 this month"
+          />
         </Grid>
 
         {/* Tabs Section */}
         <Grid item xs={12}>
           <Paper sx={{ width: '100%' }}>
-            <Tabs value={tabValue} onChange={handleTabChange}>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              indicatorColor="primary"
+              textColor="primary"
+              variant="fullWidth"
+            >
               <Tab label="Currently Borrowed" />
               <Tab label="Borrowing History" />
             </Tabs>
 
-            {/* Currently Borrowed Books */}
             <TabPanel value={tabValue} index={0}>
               <TableContainer>
                 <Table>
@@ -164,38 +220,39 @@ const MemberDashboard = () => {
                       <TableCell>Book Title</TableCell>
                       <TableCell>Borrowed Date</TableCell>
                       <TableCell>Due Date</TableCell>
-                      <TableCell>Fine (if overdue)</TableCell>
-                      <TableCell>Actions</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Fine</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {currentlyBorrowed.map((record) => (
-                      <TableRow key={record._id}>
-                        <TableCell>{record.title}</TableCell>
-                        <TableCell>
-                          {new Date(record.borrowedAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(record.dueDate).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          ₹{calculateFine(record.dueDate)}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => navigate(`/books/${record.bookId._id}`)}
-                          >
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {currentlyBorrowed.length === 0 && (
+                    {currentlyBorrowed.length > 0 ? (
+                      currentlyBorrowed.map((record) => (
+                        <TableRow key={record._id}>
+                          <TableCell>{record.title}</TableCell>
+                          <TableCell>
+                            {new Date(record.borrowedAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(record.dueDate).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={record.returnedAt ? 'Returned' : 'Borrowed'}
+                              color={record.returnedAt ? 'success' : 'warning'}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            ₹{calculateFine(record.dueDate)}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
                       <TableRow>
                         <TableCell colSpan={5} align="center">
-                          No books currently borrowed
+                          <Typography variant="body2" color="text.secondary">
+                            No books currently borrowed
+                          </Typography>
                         </TableCell>
                       </TableRow>
                     )}
@@ -204,7 +261,6 @@ const MemberDashboard = () => {
               </TableContainer>
             </TabPanel>
 
-            {/* Borrowing History */}
             <TabPanel value={tabValue} index={1}>
               <TableContainer>
                 <Table>
@@ -212,37 +268,32 @@ const MemberDashboard = () => {
                     <TableRow>
                       <TableCell>Book Title</TableCell>
                       <TableCell>Borrowed Date</TableCell>
-                      <TableCell>Return Date</TableCell>
+                      <TableCell>Returned Date</TableCell>
                       <TableCell>Fine Paid</TableCell>
-                      <TableCell>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {borrowHistory.map((record) => (
-                      <TableRow key={record._id}>
-                        <TableCell>{record.title}</TableCell>
-                        <TableCell>
-                          {new Date(record.borrowedAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(record.returnedAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>₹{record.fine || 0}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => navigate(`/books/${record.bookId._id}`)}
-                          >
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {borrowHistory.length === 0 && (
+                    {borrowHistory.length > 0 ? (
+                      borrowHistory.map((record) => (
+                        <TableRow key={record._id}>
+                          <TableCell>{record.title}</TableCell>
+                          <TableCell>
+                            {new Date(record.borrowedAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(record.returnedAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            ₹{record.fine || 0}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
                       <TableRow>
-                        <TableCell colSpan={5} align="center">
-                          No borrowing history available
+                        <TableCell colSpan={4} align="center">
+                          <Typography variant="body2" color="text.secondary">
+                            No borrowing history available
+                          </Typography>
                         </TableCell>
                       </TableRow>
                     )}

@@ -7,35 +7,51 @@ import {
   Paper,
   Typography,
   Box,
-  Card,
-  CardContent,
-  Button,
   CircularProgress,
   Alert,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   People as PeopleIcon,
   Book as BookIcon,
   LibraryBooks as LibraryBooksIcon,
   PersonAdd as PersonAddIcon,
+  Group as GroupIcon,
+  Notifications as NotificationsIcon,
+  MenuBook,
 } from '@mui/icons-material';
 import { fetchBooks } from '../../features/books/bookSlice';
+import { bookService } from '../../services/bookService';
+import StatCard from './StatCard';
+import QuickActionButton from './QuickActionButton';
+import RecentActivity from './RecentActivity';
 
 const AdminDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { books, loading, error } = useSelector((state) => state.books);
+  const { loading, error } = useSelector((state) => state.books);
   const { user } = useSelector((state) => state.auth);
+  const [stats, setStats] = useState({
+    totalBooks: 0,
+    availableBooks: 0,
+    borrowedBooks: 0,
+    totalUsers: 0
+  });
 
   useEffect(() => {
     dispatch(fetchBooks());
-  }, [dispatch]);
+    const fetchStats = async () => {
+      try {
+        const response = await bookService.getDashboardStats();
+        setStats(response);
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      }
+    };
 
-  const stats = {
-    totalBooks: books.length,
-    availableBooks: books.filter(book => book.status === 'available').length,
-    borrowedBooks: books.filter(book => book.status === 'borrowed').length,
-  };
+    fetchStats();
+  }, [dispatch]);
 
   if (loading) {
     return (
@@ -56,48 +72,62 @@ const AdminDashboard = () => {
   }
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Admin Dashboard
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        Welcome back, {user?.name}
-      </Typography>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Admin Dashboard
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            Welcome back, {user?.name}
+          </Typography>
+        </Box>
+        <Box>
+          <Tooltip title="Notifications">
+            <IconButton>
+              <NotificationsIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
 
-      <Grid container spacing={3} sx={{ mt: 2 }}>
+      <Grid container spacing={3}>
         {/* Statistics Cards */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={2}>
-                <BookIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-                <Typography variant="h6">Total Books</Typography>
-              </Box>
-              <Typography variant="h3">{stats.totalBooks}</Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} md={3}>
+          <StatCard
+            title="Total Books"
+            value={stats.totalBooks}
+            icon={<BookIcon />}
+            color="primary"
+            trend="+12% this month"
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={2}>
-                <LibraryBooksIcon sx={{ fontSize: 40, color: 'success.main', mr: 2 }} />
-                <Typography variant="h6">Available Books</Typography>
-              </Box>
-              <Typography variant="h3">{stats.availableBooks}</Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} md={3}>
+          <StatCard
+            title="Available Books"
+            value={stats.availableBooks}
+            icon={<LibraryBooksIcon />}
+            color="success"
+            trend="+5% this week"
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={2}>
-                <PeopleIcon sx={{ fontSize: 40, color: 'warning.main', mr: 2 }} />
-                <Typography variant="h6">Borrowed Books</Typography>
-              </Box>
-              <Typography variant="h3">{stats.borrowedBooks}</Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} md={3}>
+          <StatCard
+            title="Borrowed Books"
+            value={stats.borrowedBooks}
+            icon={<MenuBook />}
+            color="warning"
+            trend="+8% this month"
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <StatCard
+            title="Total Users"
+            value={stats.totalUsers}
+            icon={<GroupIcon />}
+            color="info"
+            trend="+15% this month"
+          />
         </Grid>
 
         {/* Quick Actions */}
@@ -108,44 +138,35 @@ const AdminDashboard = () => {
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<BookIcon />}
+                <QuickActionButton
+                  icon={<BookIcon />}
+                  label="Add New Book"
                   onClick={() => navigate('/books/add')}
-                >
-                  Add New Book
-                </Button>
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<PersonAddIcon />}
+                <QuickActionButton
+                  icon={<PersonAddIcon />}
+                  label="Add New User"
                   onClick={() => navigate('/users/add')}
-                >
-                  Add New User
-                </Button>
+                  color="success"
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<LibraryBooksIcon />}
+                <QuickActionButton
+                  icon={<LibraryBooksIcon />}
+                  label="Manage Books"
                   onClick={() => navigate('/books')}
-                >
-                  Manage Books
-                </Button>
+                  color="warning"
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<PeopleIcon />}
+                <QuickActionButton
+                  icon={<GroupIcon />}
+                  label="Manage Users"
                   onClick={() => navigate('/users')}
-                >
-                  Manage Users
-                </Button>
+                  color="info"
+                />
               </Grid>
             </Grid>
           </Paper>
@@ -157,9 +178,7 @@ const AdminDashboard = () => {
             <Typography variant="h6" gutterBottom>
               Recent Activity
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              No recent activity to display
-            </Typography>
+            <RecentActivity />
           </Paper>
         </Grid>
       </Grid>
