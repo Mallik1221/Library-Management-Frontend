@@ -211,21 +211,27 @@ const LibrarianDashboard = () => {
                   ) : recentBorrowings.length > 0 ? (
                     recentBorrowings.map((borrow) => (
                       <TableRow key={borrow._id}>
-                        <TableCell>{borrow.book.title}</TableCell>
-                        <TableCell>{borrow.user.name}</TableCell>
+                        <TableCell>{borrow.book?.title || 'Unknown Book'}</TableCell>
+                        <TableCell>{borrow.user?.name || 'Unknown User'}</TableCell>
                         <TableCell>
-                          {new Date(borrow.borrowedAt).toLocaleDateString()}
+                          {borrow.borrowedAt ? new Date(borrow.borrowedAt).toLocaleDateString() : 'N/A'}
                         </TableCell>
                         <TableCell>
-                          {new Date(borrow.dueDate).toLocaleDateString()}
+                          {borrow.dueDate ? new Date(borrow.dueDate).toLocaleDateString() : 'N/A'}
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={borrow.returnedAt ? 'Returned' : borrow.dueDate < new Date().toISOString() ? 'Overdue' : 'Borrowed'}
+                            label={
+                              borrow.returnedAt 
+                                ? 'Returned' 
+                                : borrow.dueDate && new Date(borrow.dueDate) < new Date() 
+                                ? 'Overdue' 
+                                : 'Borrowed'
+                            }
                             color={
                               borrow.returnedAt
                                 ? 'success'
-                                : borrow.dueDate < new Date().toISOString()
+                                : borrow.dueDate && new Date(borrow.dueDate) < new Date()
                                 ? 'error'
                                 : 'warning'
                             }

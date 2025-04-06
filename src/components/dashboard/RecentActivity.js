@@ -74,16 +74,28 @@ const RecentActivity = () => {
         <TableBody>
           {activities.map((activity) => (
             <TableRow key={activity._id}>
-              <TableCell>{activity.book?.title}</TableCell>
-              <TableCell>{activity.user?.name}</TableCell>
+              <TableCell>{activity.book?.title || 'Unknown Book'}</TableCell>
+              <TableCell>{activity.user?.name || 'Unknown User'}</TableCell>
               <TableCell>Borrowed</TableCell>
               <TableCell>
-                {format(new Date(activity.borrowedAt), 'MMM dd, yyyy')}
+                {activity.borrowedAt ? format(new Date(activity.borrowedAt), 'MMM dd, yyyy') : 'N/A'}
               </TableCell>
               <TableCell>
                 <Chip
-                  label={activity.returnedAt ? 'Returned' : 'Borrowed'}
-                  color={activity.returnedAt ? 'success' : 'warning'}
+                  label={
+                    activity.returnedAt 
+                      ? 'Returned' 
+                      : activity.dueDate && new Date(activity.dueDate) < new Date() 
+                      ? 'Overdue' 
+                      : 'Borrowed'
+                  }
+                  color={
+                    activity.returnedAt
+                      ? 'success'
+                      : activity.dueDate && new Date(activity.dueDate) < new Date()
+                      ? 'error'
+                      : 'warning'
+                  }
                   size="small"
                 />
               </TableCell>
